@@ -1,1 +1,14 @@
 /data/config.py
+/dist/
+/build/
+/chromedriver.exe
+/cookies_1
+/data.zip
+/main.py
+/main_async.py
+/nodejss.py
+/tests.py
+/zhenskaya-odezhda.xlsx
+/tests.spec
+/test.spec
+/test.txt

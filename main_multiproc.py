@@ -5,7 +5,7 @@ import requests
 import aiohttp
 import asyncio
 from itertools import groupby
-from data.config import DATABASE
+from data.config import DATABASE, THREADS, SEMAPHORES
 from db.storage import MongoHandler
 
 
@@ -499,11 +499,8 @@ def script(params):
         #     proc.join()
         ads = asyncio.get_event_loop().run_until_complete(get_all_pages(params['category'], res_arr_price, params['published']))
         ads = [el for el, _ in groupby(ads)]
-        try:
-            with open('res.txt', 'a') as f:
-                f.write(f'{len(ads)} {params["category"]}\n')
-        except Exception as e:
-            print(e)
+        start_len = len(ads)
+
         print('got all ads                ', len(ads), round(time.time() - mid_time, 4), params['category'])
         mid_time = time.time()
         ads = delete_copy(ads, params['category'])
@@ -534,6 +531,11 @@ def script(params):
             #db.insert_many_records(col, stu_list)
             db.insert_many_records(col2, stu_list)
             print('FINISH', len(ads), round(time.time() - st_time, 4), params['category'])
+            try:
+                with open('res.txt', 'a') as f:
+                    f.write(f'{params["category"]} {start_len} {round(time.time() - st_time, 4)}\n')
+            except Exception as e:
+                print(e)
     except:
         pass
 
@@ -597,10 +599,14 @@ ads = []
 counter = 0
 counter_ads = 0
 res_arr_price = []
-semaphore = asyncio.Semaphore(100)
+semaphore = asyncio.Semaphore(SEMAPHORES)
 from multiprocessing import Pool
 if __name__ == "__main__":
     while True:
+        with open('log.txt', 'a', encoding='utf-8') as f:
+            f.write('\n###########################\n')
+        with open('res.txt', 'a', encoding='utf-8') as f:
+            f.write('\n###########################\n')
         start_full_time = time.time()
         global arr_names_set
         params = {}
@@ -637,9 +643,10 @@ if __name__ == "__main__":
 
         # cut_params = lambda lst, sz: [lst[i:i + sz] for i in range(0, len(lst), sz)]
         # cutted = cut_params(task_array, 30)
-        pool = Pool(2)
+        pool = Pool(THREADS)
         pool.map(script, task_array)
-        s = f'END MAZAFAKA {time.time() - start_full_time}'
+        s = f'END MAZAFAKA {time.time() - start_full_time}\n'
         print(s)
         with open('log.txt', 'a', encoding='utf-8') as f:
             f.write(s)
+
