@@ -264,9 +264,8 @@ async def get_products_owner_async(session, id):
     return arr_active, arr_sold
 
 
-async def parse_products(session, page, category, price_from, price_to, published, sort):
-    if minimum_price != price_from:
-        price_from += 1
+async def parse_products(session, page, category, published, sort):
+
     t = round(time.time())
     price_from = 1000
     price_to = 100000
@@ -350,40 +349,44 @@ x-youla-splits: 8a=3|8b=7|8c=0|8m=0|8v=0|8z=0|16a=0|16b=0|64a=6|64b=0|100a=60|10
                     pass
         except:
             pass
-    counter_ads += len(new_adss)
-    print(price_from, price_to, len(new_adss))
+    if len(new_adss) > 20:
+        print(price_from, price_to, len(new_adss), category)
     # global res_arr_price
     # sys.stderr.write(f'pars products {counter}/{len(res_arr_price) * (pages - 1) * 4} sum_ads: {counter_ads}\r')
-    return new_adss
+    return {category: new_adss}
 
 
 async def get_all_pages(category, res_arr_price_, published):
     async with aiohttp.ClientSession() as session:
         tasks = []
+        all_ads = []
         for i in category:
-            task1 = asyncio.create_task(parse_products(session, 0, i, res_arr_price_[0], res_arr_price_[0 + 1], published, 'DATE_PUBLISHED_DESC'))
+            task1 = asyncio.create_task(parse_products(session, 0, i, published, 'DATE_PUBLISHED_DESC'))
             tasks.append(task1)
         res = await asyncio.gather(*tasks)
         new_ads_ = []
-        for i in res:
-            for j in i:
-                if j != []:
-                    new_ads_.append(j)
-        # if len(new_ads_) > 500:
-        #     tasks = []
-        #     for i in range(len(res_arr_price_) - 1):
-        #         for j in range(pages - 1):
-        #             task1 = asyncio.create_task(parse_products(session, j, category, res_arr_price_[i], res_arr_price_[i + 1], published, 'DATE_PUBLISHED_DESC'))
-        #             tasks.append(task1)
-        #
-        #     res = await asyncio.gather(*tasks)
-        #
-        #     new_ads_ = []
-        #     for i in res:
-        #         for j in i:
-        #             if j != []:
-        #                 new_ads_.append(j)
-    return new_ads_
+        for k in res:
+            #print('k', k)
+            for i in k:
+                if k[i]:
+                    if len(k[i]) > 29:
+                        tasks = []
+                        print('find more', i)
+                        for j in range(pages - 1):
+                            task1 = asyncio.create_task(parse_products(session, j, i, published, 'DATE_PUBLISHED_DESC'))
+                            tasks.append(task1)
+
+                        res = await asyncio.gather(*tasks)
+                    new_ads_ = []
+                    for i2 in res:
+                        for j2 in i2:
+                            if i2[j2] != []:
+                                new_ads_ += i2[j2]
+            #print('new ads?', new_ads_)
+            if new_ads_:
+                all_ads += new_ads_
+
+    return all_ads
 
 
 def transform_set_to_list(arr):
@@ -419,7 +422,7 @@ def delete_copy(arr, name):
     for i in arr:
         if i[0] not in arr_set_idx:
             new_arr.append(i)
-    print(f'deleted copy               -{old_len - len(new_arr)}')
+    #print(f'deleted copy               -{old_len - len(new_arr)}')
     return new_arr
 
 
@@ -437,19 +440,22 @@ def script(params):
         global minimum_price
         st_time = time.time()
         mid_time = time.time()
-        ads = asyncio.get_event_loop().run_until_complete(get_all_pages(params['category'], res_arr_price, params['published']))
+        ads = asyncio.get_event_loop().run_until_complete(get_all_pages(params['category'], [1000, 100000], params['published']))
         ads = [el for el, _ in groupby(ads)]
         start_len = len(ads)
         print('got all ads                ', len(ads), round(time.time() - mid_time, 4), params['category'])
         mid_time = time.time()
-        ads = delete_copy(ads, params['category'])
-        print('filtered by database       ', len(ads), round(time.time() - mid_time, 4), params['category'])
+        old_len = len(ads)
+        for i in params['category']:
+            ads = delete_copy(ads, i)
+        print('deleted copy -', old_len-len(ads))
+        print('filtered by database       ', len(ads), round(time.time() - mid_time, 4), params['category'][0])
         # mid_time = time.time()
         # ads = asyncio.get_event_loop().run_until_complete(delete_ads_published_all(ads, params['published']))
         # print('filtered by published date ', len(ads), round(time.time() - mid_time, 4))
         mid_time = time.time()
         ads = asyncio.get_event_loop().run_until_complete(delete_ads_by_owner_async(ads, params))
-        print('filtered by owner          ', len(ads), round(time.time() - mid_time, 4), params['category'])
+        print('filtered by owner          ', len(ads), round(time.time() - mid_time, 4), params['category'][0])
         mid_time = time.time()
         ads = [el for el, _ in groupby(ads)]
         # ads = asyncio.get_event_loop().run_until_complete(delete_by_active_sold_ads_async(ads, params))
@@ -463,11 +469,11 @@ def script(params):
             DBHandler = MongoHandler(**DB_CONF)
             db = DBHandler
             # Получить коллекцию
-            #col = db.collection(params['category'])
+            col = db.collection('buffer')
             col2 = db.collection('full')
             stu_list = [{'idx': i[0], 'link': i[1], 'phone': ' ', 'price': i[2], 'name': i[3], 'pub_date': i[4], 'seller': i[5], 'views': i[6], 'sold_count': i[7]} for i in ads]
 
-            #db.insert_many_records(col, stu_list)
+            db.insert_many_records(col, stu_list)
             db.insert_many_records(col2, stu_list)
             print('FINISH', len(ads), round(time.time() - st_time, 4), params['category'])
             try:
@@ -475,8 +481,8 @@ def script(params):
                     f.write(f'{params["category"]} {start_len} {round(time.time() - st_time, 4)}\n')
             except Exception as e:
                 print(e)
-    except:
-        pass
+    except Exception as e:
+        print(e)
 
 # get_owner('5eb16abd22a449ae77127253')
 category1 = ['Вещи, электроника и прочее', 'Запчасти и автотовары']
@@ -559,7 +565,6 @@ if __name__ == "__main__":
         cut_ads = lambda lst, sz: [lst[i:i + sz] for i in range(0, len(lst), sz)]
         cutted = cut_ads(cats, 20)
         for cat in cutted:
-            print(len(cat), cat)
             params['category'] = cat
             params['max_price'] = 100000
             params['min_price'] = 1000

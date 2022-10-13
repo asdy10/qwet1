@@ -4,9 +4,9 @@ DATABASE = {
         'password': '123456',
         'host': 'localhost',#WIN-CK6C52JRHL6
         'port': 27017,
-        'db': 'test_db',
+        'db': 'youla_parser',
         'authentication_source': 'admin',
     }
 }
-THREADS = 10
+THREADS = 5
 SEMAPHORES = 250
