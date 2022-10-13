@@ -611,35 +611,48 @@ if __name__ == "__main__":
         global arr_names_set
         params = {}
         task_array = []
-        for cat in avto_moto:
-            params['default_category'] = 'avto-moto'
-            if avto_moto[cat] in arr_new_names:
-                params['category'] = f'avto-moto-{avto_moto[cat]}'
-            else:
-                params['category'] = f'{avto_moto[cat]}'
+        cat1 = ['igry-dlya-pristavok-i-pk', 'prochee-drugoe', 'sport-otdyh-drugoe', 'zapchasti', 'foto-video-aksessuary', 'sportivnoe-pitanie', 'hehndmejd-aksessuary', 'konsoli-igry', 'kompyutery-aksessuary', 'proektory', 'smartfony-planshety-aksessuary', 'komplektuyushchie', 'strizhka-brite', 'avtohimiya', 'muzhskaya-odezhda-svitery-tolstovki', 'potolki', 'zhenskaya-odezhda-golovnye-ubory', 'detskie-kupanie', 'podstavki-tumby', 'muzhskaya-odezhda-drugoe', 'muzykalnye-instrumenti', 'detskaya-odezhda-konverty', 'tennis-badminton-ping-pong', 'turizm', 'setevoe-oborudovanie', 'solyarii-i-zagar', 'kuhonnaya-mebel', 'fotoapparaty', 'detskie-zdorove-i-uhod', 'motoehkipirovka', 'plity', 'muzhskaya-odezhda-dzhinsy-bryuki', 'medicinskie-tovary', 'knigi-zhurnaly', 'stoly-stulya', 'detskaya-odezhda-aksessuary', 'dlya-beremennyh', 'zhenskaya-odezhda-svitery-tolstovki', 'krovati', 'bagazhniki-farkopy', 'vytyazhki', 'zhenskaya-odezhda-verhnyaya']
+        cat2 = ['filmy', 'nastolnye-igry', 'edinoborstva', 'kancelyarskie-tovary', 'rubashki', 'izmelchenie-i-smeshivanie', 'roliki-skejtbording', 'samokaty-i-giroskutery', 'detskaya-odezhda-golovnye-ubory', 'ohrana-signalizaciya', 'klimaticheskaya', 'mikrofony', 'muzhskaya-odezhda-kombinezony', 'audio-video', 'naushniki', 'uhod-za-volosami', 'prigotovlenie-napitkov', 'planshety', 'ruli-dzhoistiki-geympady', 'specodezhda', 'igry-s-myachom', 'aksessuary', 'detskaya-odezhda-shtany-i-shorty', 'muzhskaya-odezhda-golovnye-ubory', 'zhenskaya-odezhda-kombinezony', 'ehlektrika', 'ehlektroinstrumenty', 'umnye-chasy', 'kollekcionirovanie', 'shkafy-komody', 'krasota-i-zdorove-drugoe', 'remont-i-stroitelstvo-drugoe', 'makiyazh', 'nizhnee-bele-plavki', 'strojmaterialy', 'detskaya-odezhda-obuv', 'kormlenie-pitanie', 'manikyur-pedikyur', 'osveshchenie', 'hehndmejd-kukly-igrushki', 'avtozapchasti']
+        cat3 = ['vodnye-vidy', 'programmnoe-obespechenie', 'sputnikovoe-i-cifrovoe-tv', 'detskie-radio-i-videonyani', 'tatu-i-tatuazh', 'mp3-pleery', 'usiliteli-resivery', 'chekhly', 'studyinoe-oborudovanie', 'zimnie-vidy', 'muzykalnye-centry-i-magnitoly', 'kosmetika', 'muzhskaya-odezhda-sportivnaya', 'uhod-za-licom', 'aksessuary-i-instrumenty', 'zhenskaya-odezhda-pidzhaki-kostyumy', 'otoplenie-ventilyaciya', 'detskaya-odezhda-kombinezony-i-bodi', 'santekhnika', 'binokli-teleskopy', 'futbolki-topy', 'ehlektronnye-knigi', 'sportivnaya-zashhita', 'protivougonnye-ustrojstva', 'dom-dacha-oformlenie-interera', 'detskie-tovary-dlya-ucheby', 'videokamery', 'videonablyudenie', 'parfyumeriya', 'prigotovlenie-edy', 'detskaya-odezhda-svitery-i-tolstovki', 'detskie-kukly-igrushki', 'domashnyaya', 'zhenskaya-odezhda-sportivnaya', 'pylesosy', 'dom-dacha-drugoe', 'zhenskaya-odezhda-aksessuary', 'detskaya-odezhda-polzunki-i-raspashonki', 'obektivy', 'fotoprintery', 'muzhskaya-odezhda-obuv']
+        cat4 = ['bilety', 'avtoelektronika-i-gps', 'bilyard-i-bouling', 'fotovspyshki', 'feny-ukladka', 'materialy-dlya-tvorchestva', 'detskaya-odezhda-futbolki', 'oformlenie-prazdnikov', 'posudomoechnye-mashiny', 'shtativy-monopody', 'izmeritelnye-instrumenty', 'detskaya-odezhda-drugoe', 'podguzniki-pelenki', 'fotoramki', 'kulery-i-filtry-dlya-vody', 'hehndmejd-posuda', 'zaryadnye-ustrojstva', 'zhenskaya-odezhda-drugoe', 'zhenskaya-odezhda-domashnyaya', 'printery-i-skanery', 'domashnie-kinoteatry', 'okna', 'stacionarnye-telefony', 'racii-i-sputnikovye-telefony', 'shvejnoe-oborudovanie', 'avtokresla', 'detskaya-odezhda-sportivnaya-odezhda', 'rasteniya', 'noutbuki', 'muzhskaya-odezhda-pidzhaki-kostyumy', 'dom-dacha-posuda', 'akusticheskie-sistemy', 'hehndmejd-ukrasheniya', 'shiny-diski', 'velosipedy-samokaty', 'stiralnye-mashiny', 'muzhskaya-odezhda-verhnyaya', 'smartfony', 'ohota-rybalka', 'detskaya-odezhda-pidzhaki-i-kostyumy', 'zhenskaya-odezhda-obuv']
+        cat5 = ['klaviatury-i-myshi', 'hobbi-razvlecheniya-drugoe', 'hehndmejd-drugoe', 'detskaya-odezhda-nizhnee-bele', 'multimedia', 'nakopiteli-dannyh-i-kartridery', 'vneshnie-akkumulyatory', 'detskaya-odezhda-domashnyaya-odezhda', 'bitovaya-himiya', 'utyugi', 'mediapleery', 'sadovaya-mebel', 'ruchnye-instrumenty', 'tekstil-kovry', 'zhenskaya-odezhda-kupalniki', 'futbolki-polo', 'sad-ogorod', 'holodilniki', 'muzyka', 'muzhskaya-odezhda-aksessuary', 'detskaya-odezhda-platya-i-yubki', 'sredstva-dlya-gigieny', 'televizory-proektory', 'detskie-tovary-dlya-mam', 'avto-moto-drugoe', 'dveri', 'hehndmejd-oformlenie-interera', 'trenazhery-fitnes', 'zhenskaya-odezhda-dzhinsy-bryuki', 'monobloki', 'detskaya-odezhda-bluzy-i-rubashki', 'divany-kresla', 'vesy', 'monitory', 'bele-kupalniki', 'mebel', 'bluzy-rubashki', 'zhenskaya-odezhda-platya-yubki', 'kolyaski', 'detskie-drugoe', 'detskaya-odezhda-verhnyaya-odezhda']
+
+        # for cat in avto_moto:
+        #     params['default_category'] = 'avto-moto'
+        #     if avto_moto[cat] in arr_new_names:
+        #         params['category'] = f'avto-moto-{avto_moto[cat]}'
+        #     else:
+        #         params['category'] = f'{avto_moto[cat]}'
+        #     params['max_price'] = 100000
+        #     params['min_price'] = 1000
+        #     params['published'] = 1000
+        #     task_array.append(params.copy())
+        #     params = {}
+        #     # print(params['category'])
+        # for cat in category2:
+        #     params['default_category'] = category2[cat]
+        #     for cat2 in full_array[cat]:
+        #         if full_array[cat][cat2] in arr_new_names:
+        #             params['category'] = f'{category2[cat]}-{full_array[cat][cat2]}'
+        #         else:
+        #             params['category'] = f'{full_array[cat][cat2]}'
+        #         # print(params['category'])
+        #         if params['category'] == 'muzhskaya-odezhda-domashnyaya':
+        #             params['category'] = 'domashnyaya'
+        #         if params['category'] == 'ehlektronika-aksessuary':
+        #             params['category'] = 'aksessuary'
+        #         params['max_price'] = 100000
+        #         params['min_price'] = 1000
+        #         params['published'] = 1000
+        #         task_array.append(params.copy())
+        #         params = {}
+        for cat in cat5:
+            params['category'] = cat
             params['max_price'] = 100000
             params['min_price'] = 1000
             params['published'] = 1000
             task_array.append(params.copy())
             params = {}
-            # print(params['category'])
-        for cat in category2:
-            params['default_category'] = category2[cat]
-            for cat2 in full_array[cat]:
-                if full_array[cat][cat2] in arr_new_names:
-                    params['category'] = f'{category2[cat]}-{full_array[cat][cat2]}'
-                else:
-                    params['category'] = f'{full_array[cat][cat2]}'
-                # print(params['category'])
-                if params['category'] == 'muzhskaya-odezhda-domashnyaya':
-                    params['category'] = 'domashnyaya'
-                if params['category'] == 'ehlektronika-aksessuary':
-                    params['category'] = 'aksessuary'
-                params['max_price'] = 100000
-                params['min_price'] = 1000
-                params['published'] = 1000
-                task_array.append(params.copy())
-                params = {}
 
         # cut_params = lambda lst, sz: [lst[i:i + sz] for i in range(0, len(lst), sz)]
         # cutted = cut_params(task_array, 30)
