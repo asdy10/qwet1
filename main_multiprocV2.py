@@ -360,43 +360,29 @@ x-youla-splits: 8a=3|8b=7|8c=0|8m=0|8v=0|8z=0|16a=0|16b=0|64a=6|64b=0|100a=60|10
 async def get_all_pages(category, res_arr_price_, published):
     async with aiohttp.ClientSession() as session:
         tasks = []
-        global counter
-        counter = 0
-        global counter_ads
-        counter_ads = 0
-        task1 = asyncio.create_task(parse_products(session, 0, category, res_arr_price_[0], res_arr_price_[0 + 1], published, 'DATE_PUBLISHED_DESC'))
-        tasks.append(task1)
+        for i in category:
+            task1 = asyncio.create_task(parse_products(session, 0, i, res_arr_price_[0], res_arr_price_[0 + 1], published, 'DATE_PUBLISHED_DESC'))
+            tasks.append(task1)
         res = await asyncio.gather(*tasks)
         new_ads_ = []
         for i in res:
             for j in i:
                 if j != []:
                     new_ads_.append(j)
-        if len(new_ads_) > 500:
-            tasks = []
-            for i in range(len(res_arr_price_) - 1):
-
-                for j in range(pages - 1):
-
-                    task1 = asyncio.create_task(parse_products(session, j, category, res_arr_price_[i], res_arr_price_[i + 1], published, 'DATE_PUBLISHED_DESC'))
-                    # task2 = asyncio.create_task(parse_products(session, j, category, res_arr_price_[i], res_arr_price_[i + 1], published, 'DEFAULT'))
-                    # task3 = asyncio.create_task(parse_products(session, j, category, res_arr_price_[i], res_arr_price_[i + 1], published, 'PRICE_ASC'))
-                    # task4 = asyncio.create_task(parse_products(session, j, category, res_arr_price_[i], res_arr_price_[i + 1], published, 'DISTANCE_ASC'))
-
-                    tasks.append(task1)
-                    # tasks.append(task2)
-                    # tasks.append(task3)
-                    # tasks.append(task4)
-
-            # res = await asyncio.wait(tasks)
-            # print(res)
-            res = await asyncio.gather(*tasks)
-            #print('res', res)
-            new_ads_ = []
-            for i in res:
-                for j in i:
-                    if j != []:
-                        new_ads_.append(j)
+        # if len(new_ads_) > 500:
+        #     tasks = []
+        #     for i in range(len(res_arr_price_) - 1):
+        #         for j in range(pages - 1):
+        #             task1 = asyncio.create_task(parse_products(session, j, category, res_arr_price_[i], res_arr_price_[i + 1], published, 'DATE_PUBLISHED_DESC'))
+        #             tasks.append(task1)
+        #
+        #     res = await asyncio.gather(*tasks)
+        #
+        #     new_ads_ = []
+        #     for i in res:
+        #         for j in i:
+        #             if j != []:
+        #                 new_ads_.append(j)
     return new_ads_
 
 
@@ -437,33 +423,6 @@ def delete_copy(arr, name):
     return new_arr
 
 
-def main(params):
-    start_full_time = time.time()
-    #params = {}
-    params['max_price'] = 100000
-    params['min_price'] = 1
-    global minimum_price
-    minimum_price = params['min_price']
-    params['active_ad_min'] = 0
-    params['active_ad_max'] = 100000
-    params['close_ad_min'] = 0
-    params['close_ad_max'] = 100000
-    params['views_min'] = 0
-    params['views_max'] = 100000
-    params['followers_min'] = 0
-    params['followers_max'] = 100000
-    params['published'] = 86400
-    params['count_active_ad_by_price_min'] = 0
-    params['count_active_ad_by_price_max'] = 100000
-    params['count_active_ad_by_price_price_min'] = 0
-    params['count_active_ad_by_price_price_max'] = 100000
-    params['count_sold_ad_by_price_min'] = 0
-    params['count_sold_ad_by_price_max'] = 100000
-    params['count_sold_ad_by_price_price_min'] = 0
-    params['count_sold_ad_by_price_price_max'] = 100000
-    print('END MAZAFAKA', time.time() - start_full_time)
-
-
 def run_get_all_pages(category, arr_price, published):
     loop = asyncio.new_event_loop()
     new_ads = loop.run_until_complete(get_all_pages(category, arr_price, published))
@@ -476,43 +435,11 @@ def script(params):
         print('START', params['category'])
         global ads
         global minimum_price
-        ads = []
-
         st_time = time.time()
         mid_time = time.time()
-        loop = asyncio.get_event_loop()
-        arr_min_price = []
-        min_price = params['min_price']
-
-        arr_price = [1000, 1001, 1500, 2000, 2500, 3500, 4000, 5000, 5500, 6000, 7500, 9500, 11500, 13500, 15500, 17500, 19500, 21500, 23500, 25500, 27500, 29500, 31500, 33500, 35500, 37500, 40000, 100000]
-        arr_min_price.append(params['max_price'])
-        global res_arr_price
-        res_arr_price = []
-        for i in arr_price:
-            if params['min_price'] <= i <= params['max_price']:
-                res_arr_price.append(i)
-        res_arr_price = [1000, 100000]
-        if params['min_price'] < res_arr_price[0]:
-            res_arr_price.insert(0, params['min_price'])
-        if params['max_price'] > res_arr_price[-1]:
-            res_arr_price.append(params['max_price'])
-        ads = []
-
-        # cut_ads = lambda lst, sz: [lst[i:i + sz] for i in range(0, len(lst), sz)]
-        #
-        # cutted = cut_ads(res_arr_price, 30)
-        # procs = []
-        # for i in cutted:
-        #     proc = Process(target=run_get_all_pages, args=(params['category'], i, params['published']))
-        #     procs.append(proc)
-        #     proc.start()
-        #
-        # for proc in procs:
-        #     proc.join()
         ads = asyncio.get_event_loop().run_until_complete(get_all_pages(params['category'], res_arr_price, params['published']))
         ads = [el for el, _ in groupby(ads)]
         start_len = len(ads)
-
         print('got all ads                ', len(ads), round(time.time() - mid_time, 4), params['category'])
         mid_time = time.time()
         ads = delete_copy(ads, params['category'])
@@ -628,46 +555,48 @@ if __name__ == "__main__":
         cat3 = ['vodnye-vidy', 'programmnoe-obespechenie', 'sputnikovoe-i-cifrovoe-tv', 'detskie-radio-i-videonyani', 'tatu-i-tatuazh', 'mp3-pleery', 'usiliteli-resivery', 'chekhly', 'studyinoe-oborudovanie', 'zimnie-vidy', 'muzykalnye-centry-i-magnitoly', 'kosmetika', 'muzhskaya-odezhda-sportivnaya', 'uhod-za-licom', 'aksessuary-i-instrumenty', 'zhenskaya-odezhda-pidzhaki-kostyumy', 'otoplenie-ventilyaciya', 'detskaya-odezhda-kombinezony-i-bodi', 'santekhnika', 'binokli-teleskopy', 'futbolki-topy', 'ehlektronnye-knigi', 'sportivnaya-zashhita', 'protivougonnye-ustrojstva', 'dom-dacha-oformlenie-interera', 'detskie-tovary-dlya-ucheby', 'videokamery', 'videonablyudenie', 'parfyumeriya', 'prigotovlenie-edy', 'detskaya-odezhda-svitery-i-tolstovki', 'detskie-kukly-igrushki', 'domashnyaya', 'zhenskaya-odezhda-sportivnaya', 'pylesosy', 'dom-dacha-drugoe', 'zhenskaya-odezhda-aksessuary', 'detskaya-odezhda-polzunki-i-raspashonki', 'obektivy', 'fotoprintery', 'muzhskaya-odezhda-obuv']
         cat4 = ['bilety', 'avtoelektronika-i-gps', 'bilyard-i-bouling', 'fotovspyshki', 'feny-ukladka', 'materialy-dlya-tvorchestva', 'detskaya-odezhda-futbolki', 'oformlenie-prazdnikov', 'posudomoechnye-mashiny', 'shtativy-monopody', 'izmeritelnye-instrumenty', 'detskaya-odezhda-drugoe', 'podguzniki-pelenki', 'fotoramki', 'kulery-i-filtry-dlya-vody', 'hehndmejd-posuda', 'zaryadnye-ustrojstva', 'zhenskaya-odezhda-drugoe', 'zhenskaya-odezhda-domashnyaya', 'printery-i-skanery', 'domashnie-kinoteatry', 'okna', 'stacionarnye-telefony', 'racii-i-sputnikovye-telefony', 'shvejnoe-oborudovanie', 'avtokresla', 'detskaya-odezhda-sportivnaya-odezhda', 'rasteniya', 'noutbuki', 'muzhskaya-odezhda-pidzhaki-kostyumy', 'dom-dacha-posuda', 'akusticheskie-sistemy', 'hehndmejd-ukrasheniya', 'shiny-diski', 'velosipedy-samokaty', 'stiralnye-mashiny', 'muzhskaya-odezhda-verhnyaya', 'smartfony', 'ohota-rybalka', 'detskaya-odezhda-pidzhaki-i-kostyumy', 'zhenskaya-odezhda-obuv']
         cat5 = ['klaviatury-i-myshi', 'hobbi-razvlecheniya-drugoe', 'hehndmejd-drugoe', 'detskaya-odezhda-nizhnee-bele', 'multimedia', 'nakopiteli-dannyh-i-kartridery', 'vneshnie-akkumulyatory', 'detskaya-odezhda-domashnyaya-odezhda', 'bitovaya-himiya', 'utyugi', 'mediapleery', 'sadovaya-mebel', 'ruchnye-instrumenty', 'tekstil-kovry', 'zhenskaya-odezhda-kupalniki', 'futbolki-polo', 'sad-ogorod', 'holodilniki', 'muzyka', 'muzhskaya-odezhda-aksessuary', 'detskaya-odezhda-platya-i-yubki', 'sredstva-dlya-gigieny', 'televizory-proektory', 'detskie-tovary-dlya-mam', 'avto-moto-drugoe', 'dveri', 'hehndmejd-oformlenie-interera', 'trenazhery-fitnes', 'zhenskaya-odezhda-dzhinsy-bryuki', 'monobloki', 'detskaya-odezhda-bluzy-i-rubashki', 'divany-kresla', 'vesy', 'monitory', 'bele-kupalniki', 'mebel', 'bluzy-rubashki', 'zhenskaya-odezhda-platya-yubki', 'kolyaski', 'detskie-drugoe', 'detskaya-odezhda-verhnyaya-odezhda']
-
-        for cat in avto_moto:
-            params['default_category'] = 'avto-moto'
-            if avto_moto[cat] in arr_new_names:
-                params['category'] = f'avto-moto-{avto_moto[cat]}'
-            else:
-                params['category'] = f'{avto_moto[cat]}'
+        cats = cat1 + cat2 + cat3 + cat4 + cat5
+        cut_ads = lambda lst, sz: [lst[i:i + sz] for i in range(0, len(lst), sz)]
+        cutted = cut_ads(cats, 20)
+        for cat in cutted:
+            print(len(cat), cat)
+            params['category'] = cat
             params['max_price'] = 100000
             params['min_price'] = 1000
             params['published'] = 30
             task_array.append(params.copy())
             params = {}
-            # print(params['category'])
-        for cat in category2:
-            params['default_category'] = category2[cat]
-            for cat2 in full_array[cat]:
-                if full_array[cat][cat2] in arr_new_names:
-                    params['category'] = f'{category2[cat]}-{full_array[cat][cat2]}'
-                else:
-                    params['category'] = f'{full_array[cat][cat2]}'
-                # print(params['category'])
-                if params['category'] == 'muzhskaya-odezhda-domashnyaya':
-                    params['category'] = 'domashnyaya'
-                if params['category'] == 'ehlektronika-aksessuary':
-                    params['category'] = 'aksessuary'
-                params['max_price'] = 100000
-                params['min_price'] = 1000
-                params['published'] = 30
-                task_array.append(params.copy())
-                params = {}
-        # for cat in cat5:
-        #     params['category'] = cat
+
+        # for cat in avto_moto:
+        #     params['default_category'] = 'avto-moto'
+        #     if avto_moto[cat] in arr_new_names:
+        #         params['category'] = f'avto-moto-{avto_moto[cat]}'
+        #     else:
+        #         params['category'] = f'{avto_moto[cat]}'
         #     params['max_price'] = 100000
         #     params['min_price'] = 1000
-        #     params['published'] = 200
+        #     params['published'] = 30
         #     task_array.append(params.copy())
         #     params = {}
+        #     # print(params['category'])
+        # for cat in category2:
+        #     params['default_category'] = category2[cat]
+        #     for cat2 in full_array[cat]:
+        #         if full_array[cat][cat2] in arr_new_names:
+        #             params['category'] = f'{category2[cat]}-{full_array[cat][cat2]}'
+        #         else:
+        #             params['category'] = f'{full_array[cat][cat2]}'
+        #         # print(params['category'])
+        #         if params['category'] == 'muzhskaya-odezhda-domashnyaya':
+        #             params['category'] = 'domashnyaya'
+        #         if params['category'] == 'ehlektronika-aksessuary':
+        #             params['category'] = 'aksessuary'
+        #         params['max_price'] = 100000
+        #         params['min_price'] = 1000
+        #         params['published'] = 30
+        #         task_array.append(params.copy())
+        #         params = {}
 
-        # cut_params = lambda lst, sz: [lst[i:i + sz] for i in range(0, len(lst), sz)]
-        # cutted = cut_params(task_array, 30)
         pool = Pool(THREADS)
         pool.map(script, task_array)
         s = f'END MAZAFAKA {time.time() - start_full_time}\n'
