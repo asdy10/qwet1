@@ -15,16 +15,12 @@ def get_date_published(id):
     }
     url = f'https://api.youla.io/api/v1/product/{id}'
     res = requests.get(url=url, headers=headers).json()
-
     return res['data']['date_published']
 
 
 def delete_ads_price(ads, max_p, min_p):
     new_ads = []
-    count = 0
     for i in ads:
-        count += 1
-        #sys.stderr.write(f'check price {count}/{len(ads)}\r')
         if min_p <= i[2] <= max_p:
             new_ads.append(i)
     return new_ads
@@ -32,10 +28,7 @@ def delete_ads_price(ads, max_p, min_p):
 
 def delete_ads_published(ads, published):
     new_ads = []
-    count = 0
     for i in ads:
-        count += 1
-        #sys.stderr.write(f'check published date {count}/{len(ads)}\r')
         if time.time() - get_date_published(i[0]) <= published:
             new_ads.append(i)
     return new_ads
@@ -43,20 +36,13 @@ def delete_ads_published(ads, published):
 
 async def delete_ads_published_all(ads, date_published):
     new_ads = []
-    global counter
-    counter = 0
-    # global semaphore
-    # semaphore = asyncio.Semaphore(100)
     async with aiohttp.ClientSession() as session:
         tasks = []
         for i in ads:
             task = asyncio.create_task(get_date_published_async(session, i[0]))
             tasks.append(task)
-        #res = await asyncio.wait(tasks)
-        #print(res)
         res = await asyncio.gather(*tasks)
         for i, j in zip(ads, res):
-            #if time.time() - j <= date_published:
             new_ads.append(i + [j])
     return new_ads
 
@@ -79,10 +65,7 @@ async def get_date_published_async(session, id):
             #print(e)
             pass
     if f:
-        global counter
-        counter += 1
         global ads
-        #sys.stderr.write(f'check published date {counter}/{len(ads)}\r')
         try:
             return res['data']['date_created']
         except:
@@ -105,11 +88,6 @@ async def delete_ads_by_owner_async(ads, params):
 
     for i, owner_param in zip(ads, res):
         try:
-            # if params['active_ad_min'] <= owner_param['prods_active_cnt'] <= params['active_ad_max'] \
-            #         and params['close_ad_min'] <= owner_param['prods_sold_cnt'] <= params['close_ad_max'] \
-            #         and params['views_min'] <= owner_param['views'] <= params['views_max'] \
-            #         and params['followers_min'] <= owner_param['followers'] <= params['followers_max']:
-
             new_ads_.append(i + [owner_param['date_created'], owner_param['owner_id'], owner_param['views'], owner_param['prods_sold_cnt']])
         except:
             pass
@@ -158,30 +136,7 @@ async def get_owner_async(session, pid):
         arr['date_created'] = 1658000000
 
     timestamp = round(time.time() * 100)
-    # url = f'https://api.youla.io/api/v1/user/{arr["owner_id"]}?app_id=web%2F3&uid=62d5752869b72&timestamp={timestamp}'
-    # f = False
-    # async with semaphore:
-    #     try:
-    #         response = await session.get(url=url, headers=headers)
-    #         try:
-    #             res1 = await response.json(content_type='application/json')
-    #             f = True
-    #         except:
-    #             f = False
-    #     except Exception as e:
-    #         print(e)
-    # if f:
-    #     try:
-    #         res = res1['data']
-    #         arr['followers'] = res['followers_cnt']
-    #     except:
-    #         arr['followers'] = 100000
-    # else:
-    #     arr['followers'] = 1000000
-    # global counter
-    # global ads
-    # counter += 1
-    # sys.stderr.write(f'check owner {counter}/{len(ads)}\r')
+
     return arr
 
 
@@ -228,7 +183,6 @@ async def get_products_owner_async(session, id):
             except:
                 f = False
         except Exception as e:
-            #print(e)
             pass
     if f:
         try:
@@ -244,7 +198,6 @@ async def get_products_owner_async(session, id):
             except:
                 f2 = False
         except Exception as e:
-            #print(e)
             pass
     if f2:
         try:
@@ -257,10 +210,7 @@ async def get_products_owner_async(session, id):
     else:
         arr_active = []
         arr_sold = []
-    global counter
     global ads
-    counter += 1
-    #sys.stderr.write(f'check active and sold {counter}/{len(ads)}\r')
     return arr_active, arr_sold
 
 
@@ -271,12 +221,6 @@ async def parse_products(session, page, category, published, sort):
     price_to = 100000
     date_to = t
     date_from = t - published
-    # page1 = '{"operationName":"catalogProductsBoard","variables":{"sort":"' + sort + '","attributes":[' \
-    #         '{"slug":"price","value":null,"from":' + f'{price_from*100}' + ',"to":' + f'{price_to*100}' + '},' \
-    #         '{"slug":"zhenskaya_odezhda_aksessuary_tip","value":["8251"],"from":null,"to":null},{"slug":"categories",' \
-    #         '"value":["' + f'{category}' + '"],"from":null,"to":null}],"datePublished":{"to":' + f'{date_to}' + ',"from":' + f'{date_from}' + '},' \
-    #         '"location":{"latitude":51.7996544,"longitude":58.2975488,"city":null,"distanceMax":null},"search":""},' \
-    #         '"extensions":{"persistedQuery":{"version":1,"sha256Hash":"6e7275a709ca5eb1df17abfb9d5d68212ad910dd711d55446ed6fa59557e2602"}}}'
     page2 = '{"operationName":"catalogProductsBoard","variables":{"sort":"' + sort + '",' \
            '"attributes":[{"slug":"price","value":null,"from":' + f'{price_from*100}' + ',"to":' + f'{price_to*100}' + '},' \
            '{"slug":"categories","value":["' + f'{category}' + '"],"from":null,"to":null}],' \
@@ -312,11 +256,7 @@ x-uid: 62d9c8e0d5ec0
 x-youla-splits: 8a=3|8b=7|8c=0|8m=0|8v=0|8z=0|16a=0|16b=0|64a=6|64b=0|100a=60|100b=39|100c=0|100d=0|100m=0"""
 
     arr = {i.split(':')[0]: i.split(': ')[1] for i in headers2.split('\n')}
-    #print(r['variables']['cursor'])
-    #1658686926
     url = 'https://api-gw.youla.io/federation/graphql'
-    #res = requests.post(url=url, headers=arr, json=r).json()
-    #print(res)
     f = False
     async with semaphore:
         try:
@@ -325,21 +265,11 @@ x-youla-splits: 8a=3|8b=7|8c=0|8m=0|8v=0|8z=0|16a=0|16b=0|64a=6|64b=0|100a=60|10
                 res = await response.json(content_type='application/json')
                 f = True
             except:
-                #print('ERROR')
                 f = False
         except Exception as e:
             pass
-            #print(e)
-
-    global counter
-    counter += 1
-    global counter_ads
-
     global pages
-
-    #print(res['data']['feed']['pageInfo'])
     new_adss = []
-    #print('res2', res)
     if f:
         try:
             for i in res['data']['feed']['items']:
@@ -351,8 +281,6 @@ x-youla-splits: 8a=3|8b=7|8c=0|8m=0|8v=0|8z=0|16a=0|16b=0|64a=6|64b=0|100a=60|10
             pass
     if len(new_adss) > 20:
         print(price_from, price_to, len(new_adss), category)
-    # global res_arr_price
-    # sys.stderr.write(f'pars products {counter}/{len(res_arr_price) * (pages - 1) * 4} sum_ads: {counter_ads}\r')
     return {category: new_adss}
 
 
@@ -407,11 +335,9 @@ def transform_arr_to_set(arr):
 
 
 def delete_copy(arr, name):
-    old_len = len(arr)
     DB_CONF = DATABASE['mongodb']
     DBHandler = MongoHandler(**DB_CONF)
     db = DBHandler
-    # Получить коллекцию
     col = db.collection(name)
     condition2 = {}
     res2 = db.find_records(col, condition2)
@@ -422,7 +348,6 @@ def delete_copy(arr, name):
     for i in arr:
         if i[0] not in arr_set_idx:
             new_arr.append(i)
-    #print(f'deleted copy               -{old_len - len(new_arr)}')
     return new_arr
 
 
@@ -446,13 +371,16 @@ def script(params):
         print('got all ads                ', len(ads), round(time.time() - mid_time, 4), params['category'])
         mid_time = time.time()
         old_len = len(ads)
-        for i in params['category']:
-            ads = delete_copy(ads, i)
+        ads = delete_copy(ads, 'full')
         print('deleted copy -', old_len-len(ads))
         print('filtered by database       ', len(ads), round(time.time() - mid_time, 4), params['category'][0])
-        # mid_time = time.time()
-        # ads = asyncio.get_event_loop().run_until_complete(delete_ads_published_all(ads, params['published']))
-        # print('filtered by published date ', len(ads), round(time.time() - mid_time, 4))
+        if time.time() - mid_time > 20:
+            # clear table
+            DB_CONF = DATABASE['mongodb']
+            DBHandler = MongoHandler(**DB_CONF)
+            db = DBHandler
+            col = db.collection('full')
+            db.delete_records(col, {})
         mid_time = time.time()
         ads = asyncio.get_event_loop().run_until_complete(delete_ads_by_owner_async(ads, params))
         print('filtered by owner          ', len(ads), round(time.time() - mid_time, 4), params['category'][0])
@@ -460,10 +388,6 @@ def script(params):
         ads = [el for el, _ in groupby(ads)]
         # ads = asyncio.get_event_loop().run_until_complete(delete_by_active_sold_ads_async(ads, params))
         # print('filtered by active and sold', len(ads), round(time.time() - mid_time, 4))
-        # for i in ads:
-        #     print(i)
-
-
         if ads:
             DB_CONF = DATABASE['mongodb']
             DBHandler = MongoHandler(**DB_CONF)
@@ -476,15 +400,10 @@ def script(params):
             db.insert_many_records(col, stu_list)
             db.insert_many_records(col2, stu_list)
             print('FINISH', len(ads), round(time.time() - st_time, 4), params['category'])
-            try:
-                with open('res.txt', 'a') as f:
-                    f.write(f'{params["category"]} {start_len} {round(time.time() - st_time, 4)}\n')
-            except Exception as e:
-                print(e)
     except Exception as e:
         print(e)
 
-# get_owner('5eb16abd22a449ae77127253')
+
 category1 = ['Вещи, электроника и прочее', 'Запчасти и автотовары']
 category2 = {'Женский гардероб': 'zhenskaya-odezhda', 'Мужской гардероб': 'muzhskaya-odezhda',
              'Детский гардероб': 'detskaya-odezhda',
@@ -550,8 +469,6 @@ if __name__ == "__main__":
     while True:
         with open('log.txt', 'a', encoding='utf-8') as f:
             f.write('\n###########################\n')
-        with open('res.txt', 'a', encoding='utf-8') as f:
-            f.write('\n###########################\n')
         start_full_time = time.time()
         global arr_names_set
         params = {}
@@ -571,37 +488,6 @@ if __name__ == "__main__":
             params['published'] = 30
             task_array.append(params.copy())
             params = {}
-
-        # for cat in avto_moto:
-        #     params['default_category'] = 'avto-moto'
-        #     if avto_moto[cat] in arr_new_names:
-        #         params['category'] = f'avto-moto-{avto_moto[cat]}'
-        #     else:
-        #         params['category'] = f'{avto_moto[cat]}'
-        #     params['max_price'] = 100000
-        #     params['min_price'] = 1000
-        #     params['published'] = 30
-        #     task_array.append(params.copy())
-        #     params = {}
-        #     # print(params['category'])
-        # for cat in category2:
-        #     params['default_category'] = category2[cat]
-        #     for cat2 in full_array[cat]:
-        #         if full_array[cat][cat2] in arr_new_names:
-        #             params['category'] = f'{category2[cat]}-{full_array[cat][cat2]}'
-        #         else:
-        #             params['category'] = f'{full_array[cat][cat2]}'
-        #         # print(params['category'])
-        #         if params['category'] == 'muzhskaya-odezhda-domashnyaya':
-        #             params['category'] = 'domashnyaya'
-        #         if params['category'] == 'ehlektronika-aksessuary':
-        #             params['category'] = 'aksessuary'
-        #         params['max_price'] = 100000
-        #         params['min_price'] = 1000
-        #         params['published'] = 30
-        #         task_array.append(params.copy())
-        #         params = {}
-
         pool = Pool(THREADS)
         pool.map(script, task_array)
         s = f'END MAZAFAKA {time.time() - start_full_time}\n'
