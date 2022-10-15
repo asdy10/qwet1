@@ -88,6 +88,7 @@ async def delete_ads_by_owner_async(ads, params):
 
     for i, owner_param in zip(ads, res):
         try:
+            #print(owner_param)
             new_ads_.append(i + [owner_param['date_created'], owner_param['owner_id'], owner_param['views'], owner_param['prods_sold_cnt']])
         except:
             pass
@@ -116,8 +117,9 @@ async def get_owner_async(session, pid):
         try:
             res = res1['data']
             owner = res['owner']
+            #print(res)
             try:
-                arr['date_created'] = res['date_created']
+                arr['date_created'] = res['date_published']
             except:
                 arr['date_created'] = 1658000000
             arr['prods_active_cnt'] = owner['prods_active_cnt']
@@ -219,8 +221,8 @@ async def parse_products(session, page, category, published, sort):
     t = round(time.time())
     price_from = 1000
     price_to = 100000
-    date_to = t
-    date_from = t - published
+    date_to = t + 10
+    date_from = t - 30
     page2 = '{"operationName":"catalogProductsBoard","variables":{"sort":"' + sort + '",' \
            '"attributes":[{"slug":"price","value":null,"from":' + f'{price_from*100}' + ',"to":' + f'{price_to*100}' + '},' \
            '{"slug":"categories","value":["' + f'{category}' + '"],"from":null,"to":null}],' \
@@ -393,11 +395,11 @@ def script(params):
             DBHandler = MongoHandler(**DB_CONF)
             db = DBHandler
             # Получить коллекцию
-            col = db.collection('buffer')
+            #col = db.collection('buffer')
             col2 = db.collection('full')
             stu_list = [{'idx': i[0], 'link': i[1], 'phone': ' ', 'price': i[2], 'name': i[3], 'pub_date': i[4], 'seller': i[5], 'views': i[6], 'sold_count': i[7]} for i in ads]
 
-            db.insert_many_records(col, stu_list)
+            #db.insert_many_records(col, stu_list)
             db.insert_many_records(col2, stu_list)
             print('FINISH', len(ads), round(time.time() - st_time, 4), params['category'])
     except Exception as e:
