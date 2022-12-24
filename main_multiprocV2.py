@@ -1,4 +1,5 @@
 import json
+import threading
 import time
 from collections import Counter
 import requests
@@ -36,7 +37,7 @@ def delete_ads_published(ads, published):
 
 async def delete_ads_published_all(ads, date_published):
     new_ads = []
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(read_timeout=5) as session:
         tasks = []
         for i in ads:
             task = asyncio.create_task(get_date_published_async(session, i[0]))
@@ -79,7 +80,7 @@ async def delete_ads_by_owner_async(ads, params):
     global counter
     counter = 0
     tasks = []
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(read_timeout=5) as session:
         for i in ads:
             task = asyncio.create_task(get_owner_async(session, i[0]))
             tasks.append(task)
@@ -119,7 +120,7 @@ async def get_owner_async(session, pid):
             owner = res['owner']
             #print(res)
             try:
-                arr['date_created'] = res['date_published']
+                arr['date_created'] = res['date_published']#date_published date_created
             except:
                 arr['date_created'] = 1658000000
             arr['prods_active_cnt'] = owner['prods_active_cnt']
@@ -147,7 +148,7 @@ async def delete_by_active_sold_ads_async(ads, params):
     global counter
     counter = 0
     tasks = []
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(read_timeout=5) as session:
         for i in ads:
             task = asyncio.create_task(get_products_owner_async(session, i[5]))
             tasks.append(task)
@@ -220,9 +221,9 @@ async def parse_products(session, page, category, published, sort):
 
     t = round(time.time())
     price_from = 1000
-    price_to = 100000
-    date_to = t + 10
-    date_from = t - 30
+    price_to = 200000
+    date_to = t
+    date_from = t - 60
     page2 = '{"operationName":"catalogProductsBoard","variables":{"sort":"' + sort + '",' \
            '"attributes":[{"slug":"price","value":null,"from":' + f'{price_from*100}' + ',"to":' + f'{price_to*100}' + '},' \
            '{"slug":"categories","value":["' + f'{category}' + '"],"from":null,"to":null}],' \
@@ -287,7 +288,7 @@ x-youla-splits: 8a=3|8b=7|8c=0|8m=0|8v=0|8z=0|16a=0|16b=0|64a=6|64b=0|100a=60|10
 
 
 async def get_all_pages(category, res_arr_price_, published):
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(read_timeout=5) as session:
         tasks = []
         all_ads = []
         for i in category:
@@ -337,19 +338,25 @@ def transform_arr_to_set(arr):
 
 
 def delete_copy(arr, name):
+    st_db = time.time()
     DB_CONF = DATABASE['mongodb']
     DBHandler = MongoHandler(**DB_CONF)
     db = DBHandler
     col = db.collection(name)
     condition2 = {}
     res2 = db.find_records(col, condition2)
-    arr_set_idx = set()
-    for r in res2:
-        arr_set_idx.add(r['idx'])
+    #arr_set_idx = set()
+    arr_idx = [r['idx'] for r in res2]
+
+    # for r in res2:
+    #     if r['idx'] not in arr_idx:
+    #         arr_idx.append(r['idx'])
+    #     #arr_set_idx.add(r['idx'])
     new_arr = []
     for i in arr:
-        if i[0] not in arr_set_idx:
+        if i[0] not in arr_idx:
             new_arr.append(i)
+    print('FILTER DB', time.time() - st_db)
     return new_arr
 
 
@@ -360,8 +367,9 @@ def run_get_all_pages(category, arr_price, published):
     ads += new_ads
 
 
-def script(params):
+def script(params: dict):
     try:
+        time.sleep(params['sleep'])
         print('START', params['category'])
         global ads
         global minimum_price
@@ -373,16 +381,16 @@ def script(params):
         print('got all ads                ', len(ads), round(time.time() - mid_time, 4), params['category'])
         mid_time = time.time()
         old_len = len(ads)
-        ads = delete_copy(ads, 'full')
+        ads = delete_copy(ads, params['category'][0])
         print('deleted copy -', old_len-len(ads))
         print('filtered by database       ', len(ads), round(time.time() - mid_time, 4), params['category'][0])
-        if time.time() - mid_time > 20:
-            # clear table
-            DB_CONF = DATABASE['mongodb']
-            DBHandler = MongoHandler(**DB_CONF)
-            db = DBHandler
-            col = db.collection('full')
-            db.delete_records(col, {})
+        # if time.time() - mid_time > 20:
+        #     # clear table
+        #     DB_CONF = DATABASE['mongodb']
+        #     DBHandler = MongoHandler(**DB_CONF)
+        #     db = DBHandler
+        #     col = db.collection('full')
+        #     db.delete_records(col, {})
         mid_time = time.time()
         ads = asyncio.get_event_loop().run_until_complete(delete_ads_by_owner_async(ads, params))
         print('filtered by owner          ', len(ads), round(time.time() - mid_time, 4), params['category'][0])
@@ -397,9 +405,10 @@ def script(params):
             # Получить коллекцию
             #col = db.collection('buffer')
             col2 = db.collection('full')
+            col = db.collection(params['category'][0])
             stu_list = [{'idx': i[0], 'link': i[1], 'phone': ' ', 'price': i[2], 'name': i[3], 'pub_date': i[4], 'seller': i[5], 'views': i[6], 'sold_count': i[7]} for i in ads]
 
-            #db.insert_many_records(col, stu_list)
+            db.insert_many_records(col, stu_list)
             db.insert_many_records(col2, stu_list)
             print('FINISH', len(ads), round(time.time() - st_time, 4), params['category'])
     except Exception as e:
@@ -468,9 +477,10 @@ res_arr_price = []
 semaphore = asyncio.Semaphore(SEMAPHORES)
 from multiprocessing import Pool
 if __name__ == "__main__":
+    with open('log.txt', 'a', encoding='utf-8') as f:
+        f.write('\n###########################\n')
     while True:
-        with open('log.txt', 'a', encoding='utf-8') as f:
-            f.write('\n###########################\n')
+
         start_full_time = time.time()
         global arr_names_set
         params = {}
@@ -483,13 +493,20 @@ if __name__ == "__main__":
         cats = cat1 + cat2 + cat3 + cat4 + cat5
         cut_ads = lambda lst, sz: [lst[i:i + sz] for i in range(0, len(lst), sz)]
         cutted = cut_ads(cats, 20)
+        sleep = 0
         for cat in cutted:
+            print(cat)
+            params['sleep'] = sleep
             params['category'] = cat
             params['max_price'] = 100000
             params['min_price'] = 1000
-            params['published'] = 30
+            params['published'] = 60
             task_array.append(params.copy())
             params = {}
+            sleep += 1
+        # for i in task_array:
+        #     print(i)
+        #     threading.Thread(target=script, args=(i,)).start()
         pool = Pool(THREADS)
         pool.map(script, task_array)
         s = f'END MAZAFAKA {time.time() - start_full_time}\n'

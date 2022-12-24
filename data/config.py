@@ -8,5 +8,5 @@ DATABASE = {
         'authentication_source': 'admin',
     }
 }
-THREADS = 5
+THREADS = 20
 SEMAPHORES = 250
